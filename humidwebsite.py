@@ -7,32 +7,41 @@
 #import necessary libraries
 from flask import Flask, request, render_template, url_for
 import os
+import random
+import string
+
 CHART_FOLDER = os.path.join('static')
 
 app= Flask(__name__)
 app.config['CHART_FOLDER'] = CHART_FOLDER
+
+###function that generates a random string to plop on the end of the URL
+def random_generator(size=6, chars=string.ascii_uppercase +string.digits):
+    return ''.join(random.choice(chars) for x in range(size))
+
+
+key=random_generator()
+print("Type this key after the page you want: ", key)
 
 #define home index
 @app.route("/",methods= ['GET','POST'])
 def index():
     return render_template('indexpage.html')
 
-@app.route("/textcharta")
+@app.route("/textcharta"+key)
 def textcharta():
     filea = open("humiddataA","r")
     fileastr = filea.read()
     filea.close()
     return render_template('textchart.html', text=fileastr)
 
-@app.route("/textchartb")
+@app.route("/textchartb"+key)
 def textchartb():
     fileb = open("humiddataB","r")
     filebstr = fileb.read()
     fileb.close()
     return  render_template('textchart.html', text=filebstr)
 
-@app.route("/chartdata", methods=['GET','POST'])
+@app.route("/chartdata"+key, methods=['GET','POST'])
 def chartdata():
     return render_template('chartsetup.html')
-
-
