@@ -14,7 +14,10 @@ import Adafruit_DHT as dht
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+import RPi.GPIO as GPIO
 
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(27, GPIO.OUT)
 
 print('Input test number that will be placed at the end of your files: ')
 datakey= str(input())
@@ -34,10 +37,13 @@ dataBcopy = open(abspathcopy+ "humiddataB" + datakey,"a+")
 
 #Take command line input for setting the time of the test
 
-print('Set length of time for humidity test in minutes: \n ')
+print('Set length of time for humidity test in minutes:  ')
 
 #converts the input time from minutes to seconds
 testlength= int(60*float(input()))
+
+print('Set temperature of the test between 70*F and 115*F:  ')
+testtemp= int(input())
 
 #sets length for data lists
 huma=[0]*(testlength)
@@ -60,17 +66,24 @@ i=0
 while currenttime-starttime <= testlength:
     huma[i],tempa[i] = dht.read_retry(dht.DHT22,4)
     humb[i],tempb[i] = dht.read_retry(dht.DHT22,17)
-    tempa[i] = 9*(tempa[i])/5 + 32
-    tempb[i] = 9*(tempb[i])/5 + 32
-    currenttime=time.time()
-    timelist[i]=currenttime-starttime
-    if(int(timelist[i])%5 == 0):
-        print('Time in test: '+ str(int(timelist[i])))
-    dataA.write('Time = {0:0.1f}s   Temp = {1:0.1f}*F   Humidity = {2:0.1f}%\n'.format(timelist[i], tempa[i], huma[i]))
-    dataB.write('Time = {0:0.1f}s   Temp = {1:0.1f}*F   Humidity = {2:0.1f}%\n'.format(timelist[i],tempb[i], humb[i]))
-    dataAcopy.write('Time = {0:0.1f}s   Temp = {1:0.1f}*F   Humidity = {2:0.1f}%\n'.format(timelist[i], tempa[i], huma[i]))
-    dataBcopy.write('Time = {0:0.1f}s   Temp = {1:0.1f}*F   Humidity = {2:0.1f}%\n'.format(timelist[i],tempb[i], humb[i]))
-    i=i+1
+    try:
+        tempa[i] = 9*(tempa[i])/5 + 32
+        tempb[i] = 9*(tempb[i])/5 + 32
+        if tempb[i] < testtemp:
+            GPIO.output(27, GPIO.HIGH)
+        else:
+            GPIO.output(27, GPIO.LOW)
+        currenttime=time.time()
+        timelist[i]=currenttime-starttime
+        if(int(timelist[i])%5 == 0):
+            print('Time in test: '+ str(int(timelist[i])))
+        dataA.write('Time = {0:0.1f}s   Temp = {1:0.1f}*F   Humidity = {2:0.1f}%\n'.format(timelist[i], tempa[i], huma[i]))
+        dataB.write('Time = {0:0.1f}s   Temp = {1:0.1f}*F   Humidity = {2:0.1f}%\n'.format(timelist[i],tempb[i], humb[i]))
+        dataAcopy.write('Time = {0:0.1f}s   Temp = {1:0.1f}*F   Humidity = {2:0.1f}%\n'.format(timelist[i], tempa[i], huma[i]))
+        dataBcopy.write('Time = {0:0.1f}s   Temp = {1:0.1f}*F   Humidity = {2:0.1f}%\n'.format(timelist[i],tempb[i], humb[i]))
+        i=i+1
+    except TypeError:
+        print('There was a sensor reading problem')
 
 #trims the zeros off of the ends of the data lists
 huma=np.trim_zeros(huma)

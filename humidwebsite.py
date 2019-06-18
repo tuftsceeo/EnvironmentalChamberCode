@@ -45,3 +45,15 @@ def textchartb():
 @app.route("/chartdata"+key, methods=['GET','POST'])
 def chartdata():
     return render_template('chartsetup.html')
+
+#https://github.com/cwalk/Pi-Temp/blob/master/lab_app/lab_app.py
+@app.route("/current_temp")
+def lab_temp():
+    import sys
+    import Adafruit_DHT
+    humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, 17)
+    temperature = temperature * 9/5.0 + 32
+    if humidity is not None and temperature is not None:
+        return render_template("current_temp.html",temp=temperature,hum=humidity)
+    else:
+        return render_template("no_sensor.html")
