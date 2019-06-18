@@ -71,6 +71,7 @@ while currenttime-starttime <= testlength:
         tempb[i] = 9*(tempb[i])/5 + 32
         if tempb[i] < testtemp:
             GPIO.output(27, GPIO.HIGH)
+            print('Heating')
         else:
             GPIO.output(27, GPIO.LOW)
         currenttime=time.time()
